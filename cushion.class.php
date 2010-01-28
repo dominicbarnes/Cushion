@@ -1,18 +1,67 @@
 <?php
-
+/**
+ * PHP Cushion
+ *
+ * An interface for a CouchDB database
+ * @author Dominic Barnes <mako281@gmail.com>
+ * @version 0.1
+ * @package cushion 
+ */
 class Cushion
 {
+	/**
+	 * @var string The protocol being used ('http' or 'https')
+	 * @access public
+	 */
 	public $protocol;
+
+	/**
+	 * @var string The hostname for the database ('localhost')
+	 * @access public
+	 */
 	public $host;
+
+	/**
+	 * @var integer The port number for the database (normally 5984)
+	 * @access public
+	 */
 	public $port;
+
+	/**
+	 * @var string The name of the database being used (to use another database, create another instance of Cushion)
+	 * @access public
+	 */
 	public $database;
+
+	/**
+	 * @var boolean Determines whether or not to output useful debugging information
+	 * @access public
+	 */
 	public $debug;
+
+	/**
+	 * @var array Stores information about the database that server that is being used
+	 * @access public
+	 */
 	public $info;
 
+	/**
+	 * @var string Stores the base URI for the CouchDB database (http://localhost:5984/)
+	 * @access private
+	 */
 	private $uri;
-	private $doc;
-	private $db;
 
+
+	/**
+	 * Constructor Method :: Establishes connection to server (uses defaults) and database (only if $database is defined)
+	 * 
+	 * @access public
+	 * @param string $database The name of the CouchDB database (default: null)
+	 * @param string $host The hostname of the CouchDB server (default: 'localhost')
+	 * @param string $protocol The protocol being used to connect to connect (default: 'http')
+	 * @param integer $port The port number being used (default: 5984)
+	 * @return void
+	 */
 	function __construct($database = null, $host = 'localhost', $protocol = 'http', $port = 5984)
 	{
 		$this->protocol = $protocol;
@@ -30,6 +79,13 @@ class Cushion
 			$this->info['database'] = $this->db_select($database);
 	}
 
+	/**
+	 * Selects a CouchDB database to be used
+	 * 
+	 * @access public
+	 * @param string $name The name of the database
+	 * @return array Information that will be stored in $this->info['database']
+	 */
 	public function db_select($name)
 	{
 		$uri = $this->protocol . '://' . $this->host . ':' . $this->port . '/' . $name . '/';
@@ -43,6 +99,14 @@ class Cushion
 		return $db_info;
 	}
 
+	/**
+	 * Creates a new CouchDB Document in the selected database
+	 * 
+	 * @access public
+	 * @param array $data Multi-dimensional array that will be JSON-encoded into a CouchDB Document
+	 * @param string $id The _id that will be set on this new document (default: null)
+	 * @return Document The CouchDB Document that has been created
+	 */
 	public function doc_create($data, $id = null)
 	{
 		if (!isset($this->database))
@@ -50,13 +114,21 @@ class Cushion
 		
 		$uri = $this->uri;
 		
-		$doc = new Document();
+		$doc = new Document;
 		if (isset($this->debug))	$doc->debug = $this->debug;
 		$doc->create($uri, $data, $id);
 
 		return $doc;
 	}
 
+	/**
+	 * Reads an existing CouchDB Document into a Document object
+	 * 
+	 * @access public
+	 * @param string $id The _id for the document being read. If none is supplied, it will retrieve all the documents on this database (default: null)
+	 * @param string $rev The _rev for the document being read. Not needed if reading all documents (default: null)
+	 * @return Document The CouchDB Document that was requested
+	 */
 	public function doc_read($id = null, $rev = null)
 	{
 		if (!isset($this->database))
@@ -66,13 +138,22 @@ class Cushion
 		$uri .= (isset($id)) ? $id : '_all_docs';
 		if (isset($rev))	$uri .= '?rev=' . $rev;
 
-		$doc = new Document();
+		$doc = new Document;
 		if (isset($this->debug))	$doc->debug = $this->debug;
 		$doc->read($uri);
 
 		return $doc;
 	}
 
+	/**
+	 * Retrieves the results of a particular view
+	 * 
+	 * @access public
+	 * @param string $design The name of the design document that the view resides on, excluding '_design/'
+	 * @param string $name The name of the view being queried
+	 * @param array $params The additional parameters to be passed to the view
+	 * @return array Multi-dimensional array containing response from query
+	 */
 	public function view_read($design, $name, $params = null)
 	{
 		if (!isset($this->database))
@@ -84,17 +165,33 @@ class Cushion
 
 		$view = new View();
 		if (isset($this->debug))	$view->debug = $this->debug;
-		$view->read($uri);
-
-		return $view;
+		return $view->read($uri);
 	}
 }
 
+/**
+ * Performs the actual work of making the HTTP request to the server, parsing the response and processing errors
+ * 
+ * @package cushion
+ */
 class Client
 {
+	/**
+	 * @var boolean Determines whether or not to output debugging information (default: false)
+	 * @access public
+	 */
 	public $debug = false;
-	private $curl;
 
+	/**
+	 * Executes an HTTP request to the specified URI, throws a CouchException if an error is detected in the response.
+	 * 
+	 * @access protected
+	 * @param string $uri The URI for the request
+	 * @param array $data The JSON data to be included in the request (default: null)
+	 * @param const $method The PECL_HTTP constant defining the HTTP Method (ie. POST, GET, etc.) to be used (default: HTTP_METH_GET)
+	 * @param array $options Array of additional options (including additional headers) to be sent with the HTTP request
+	 * @return array The json_decoded response received
+	 */
 	protected function execute($uri, $data = null, $method = HTTP_METH_GET, $options = null)
 	{
 		$info = Array();
@@ -125,25 +222,47 @@ class Client
 	}
 }
 
+
+/**
+ * Represents a CouchDB Document
+ * 
+ * @package cushion
+ */
 class Document extends Client
 {
+	/**
+	 * @var array Array that reflects the Documents structure
+	 * @access public
+	 */
 	public $doc;
-	
+
+	/**
+	 * @var uri The URI for the Document
+	 * @access private
+	 */
 	private $uri;
+
+	/**
+	 * @var string The _id for the Document
+	 * @access private
+	 */
 	private $id;
+
+	/**
+	 * @var string The _rev for the Document
+	 * @access private
+	 */
 	private $rev;
 
-	function __construct($baseuri = null, $id = null, $rev = null, $doc = null)
-	{
-		if (isset($baseuri) && isset($id) && isset($rev) && isset($doc))
-		{
-			$this->uri = $baseuri . $id . '?rev=' . $rev;
-			$this->id = $id;
-			$this->rev = $rev;
-			$this->doc = $doc;
-		}
-	}
-
+	/**
+	 * Creates a new CouchDB document
+	 * 
+	 * @access public
+	 * @param string $baseuri The URI identifying the server and database
+	 * @param array $doc The Document data (multi-dimensional array)
+	 * @param string $id The _id for this new document (default: null)
+	 * @return array The response from the CouchDB server
+	 */
 	public function create($baseuri, $doc, $id = null)
 	{
 		$this->uri = $baseuri;
@@ -160,6 +279,13 @@ class Document extends Client
 		return $output;
 	}
 
+	/**
+	 * Retrieves an existing document based on an _id and _rev
+	 * 
+	 * @access public
+	 * @param string $uri The full URI for the document
+	 * @return array The response from the CouchDB server
+	 */
 	public function read($uri)
 	{
 		$this->uri = $uri;
@@ -173,6 +299,12 @@ class Document extends Client
 		return $output;
 	}
 
+	/**
+	 * Takes the data stored in $this->doc and uses it to update the existing document
+	 * 
+	 * @access public
+	 * @return array The response from the CouchDB server
+	 */
 	public function update()
 	{
 		$output = $this->execute($this->uri, json_encode($this->doc), HTTP_METH_POST);
@@ -182,6 +314,12 @@ class Document extends Client
 		return $output;
 	}
 
+	/**
+	 * Deletes the document from the server
+	 * 
+	 * @access public
+	 * @return array The response from the CouchDB server
+	 */
 	public function delete()
 	{
 		$uri = $this->uri . '?rev=' . $this->rev;
@@ -194,6 +332,13 @@ class Document extends Client
 		return $this->execute($uri, null, HTTP_METH_DELETE);
 	}
 
+	/**
+	 * Creates a copy of the existing document to another specified ID
+	 * 
+	 * @access public
+	 * @param string $to_id The _id for the new document you will be creating
+	 * @return array The response from the CouchDB server
+	 */
 	public function copy($to_id)
 	{
 		return $this->execute($this->uri, null, HTTP_METH_COPY, Array(
@@ -202,10 +347,26 @@ class Document extends Client
 	}
 }
 
+/**
+ * Interface to check the connection to the CouchDB Server
+ * 
+ * @package cushion
+ */
 class Couch extends Client
 {
+	/**
+	 * @var string The full URI for the CouchDB server being requested
+	 * @access private
+	 */
 	private $uri;
 
+	/**
+	 * Retrieves information about a CouchDB server (also to test for existence)
+	 * 
+	 * @access public
+	 * @param type $uri The full URI for the server
+	 * @return array The response from the CouchDB server
+	 */
 	public function info($uri)
 	{
 		$this->uri = $uri;
@@ -214,10 +375,26 @@ class Couch extends Client
 	}
 }
 
+/**
+ * Interface to check the connection to the CouchDB Database
+ * 
+ * @package cushion
+ */
 class Database extends Client
 {
+	/**
+	 * @var string The full URI for the database being requested
+	 * @access private
+	 */
 	private $uri;
 
+	/**
+	 * Retrieves information about a database (also to test for existence)
+	 * 
+	 * @access public
+	 * @param type $uri The full URI for the database
+	 * @return array The response from the CouchDB server
+	 */
 	public function info($uri)
 	{
 		$this->uri = $uri;
@@ -226,10 +403,27 @@ class Database extends Client
 	}
 }
 
+/**
+ * Interface to retrieve the results of a view query
+ * 
+ * @package cushion
+ */
 class View extends Client
 {
+	/**
+	 * @var string The full URI for the view being queried
+	 * @access private
+	 */
 	private $uri;
-	
+
+	/**
+	 * Retrieves the results of a query to a view
+	 * 
+	 * @access public
+	 * @param type $uri The full URI for the view
+	 * @param array $params The extra parameters being used for the query
+	 * @return array The response from the CouchDB server
+	 */
 	public function read($uri, $params = null)
 	{
 		$this->uri = $uri;
@@ -239,11 +433,28 @@ class View extends Client
 	}
 }
 
+/**
+ * Custom Exception for CouchDB errors
+ * 
+ * @package cushion
+ */
 class CouchException extends Exception
 {
+	/**
+	 * @var string Additional information about this Exception. The type of error specified by the CouchDB response {"error": "[type]", "reason": "[message]"}
+	 * @access private
+	 */
 	private $type;
-	
-	public function __construct($type, $message, $code = 0)
+
+	/**
+	 * Constructor Method :: Takes in the information given, assigns the internal properties and gets the Status Code message for the HTTP response
+	 * Typical Error Respons: {"error": "[type]", "reason": "[message]"}
+	 * 
+	 * @param string $type The type of error according to the CouchDB response
+	 * @param string $message The reason for the error according to the CouchDB response
+	 * @param integer $code The HTTP Response Code
+	 */
+	function __construct($type, $message, $code)
 	{
 		// make sure everything is assigned properly
 		parent::__construct($message, $code);
@@ -254,7 +465,12 @@ class CouchException extends Exception
 		$this->code_message = StatusCodes::getMessageForCode($code);
 	}
 
-	// custom string representation of object
+	/**
+	 * Custom string representation of the exception
+	 * 
+	 * @access public
+	 * @return string Formatted exception message
+	 */
 	public function __toString()
 	{
 		return __CLASS__ . ": [{$this->code_message}] [{$this->type}]: {$this->message} \n";
