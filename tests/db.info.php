@@ -2,11 +2,18 @@
 
 require_once('../cushion.class.php');
 
-$cushion = new Cushion();
-$cushion->db_select('mydb');
+try
+{
+	$cushion = new Cushion();
+	$cushion->db_select('mydb');
 
-echo '<pre>';
-print_r($cushion->info['database']);
-echo '</pre>';
+	echo '<pre>';
+	print_r($cushion->info['database']);
+	echo '</pre>';
+}
+catch (CouchException $e)
+{
+	echo $e->__toString();
+}
 
 ?>

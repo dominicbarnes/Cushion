@@ -2,9 +2,16 @@
 
 require_once('../cushion.class.php');
 
-$cushion = new Cushion();
-$cushion->db_select('mydb');
+try
+{
+	$cushion = new Cushion();
+	$cushion->db_select('mydb');
 
-$doc = $cushion->doc_read('test_doc_id');
+	$doc = $cushion->doc_read('test_doc_id');
+}
+catch (CouchException $e)
+{
+	echo $e->__toString();
+}
 
 ?>
