@@ -9,7 +9,7 @@ Cushion is a PHP library meant solely for communicating with a CouchDB server.
 
 ### Dependencies
 
-Cushion requires the `PECL_HTTP` ([website](http://pecl.php.net/package/pecl_http) extension
+Cushion requires the [PECL_HTTP](http://pecl.php.net/package/pecl_http) extension
 
 #### Installing PECL_HTTP
 
