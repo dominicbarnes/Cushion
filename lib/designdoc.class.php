@@ -2,19 +2,23 @@
 
 class DesignDocument extends Document {
 	public static function Create($db, $designdoc_name, $views, $shows = null, $lists = null, $updates = null, $validate = null) {
+		$d = new DesignDocument;
+
 		$doc = Array('views' => $views);
 		if (isset($shows))	$doc['shows'] = $shows;
 		if (isset($lists))	$doc['lists'] = $shows;
 		if (isset($updates))	$doc['updates'] = $updates;
 		if (isset($validate))	$doc['validate_doc_update'] = $validate;
 
-		return parent::Create($db, $doc, "_design/$designdoc_name");
+		$d->_create($db, $doc, '_design/' . $designdoc_name);
+
+		return $d;
 	}
 
 	public static function Get($db, $designdoc_name, $rev = null) {
 		$d = new DesignDocument;
 
-		$d->_get($db, "_design/$designdoc_name", $rev);
+		$d->_get($db, '_design/' . $designdoc_name, $rev);
 		$d->_active = true;
 
 		return $d;

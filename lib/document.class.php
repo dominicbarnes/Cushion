@@ -54,13 +54,13 @@ class Document extends Cushion {
 	/**
 	 * Creates a new CouchDB document
 	 *
-	 * @access public
+	 * @access protected
 	 * @param string $baseuri The URI identifying the server and database
 	 * @param array $doc The Document data (multi-dimensional array)
 	 * @param string $id The _id for this new document (default: null)
 	 * @return array The response from the CouchDB server
 	 */
-	private function _create($db, $doc, $id = null) {
+	protected function _create($db, $doc, $id = null) {
 		$this->_uri_pieces = $db->_uri_pieces;
 		if (isset($id))	$this->_uri_pieces['path'][1] = $id;
 
@@ -81,11 +81,11 @@ class Document extends Cushion {
 	/**
 	 * Retrieves an existing document based on an _id and _rev
 	 *
-	 * @access public
+	 * @access protected
 	 * @param string $uri The full URI for the document
 	 * @return array The response from the CouchDB server
 	 */
-	public function _get($db, $id, $rev = null) {
+	protected function _get($db, $id, $rev = null) {
 		$this->_uri_pieces = $db->_uri_pieces;
 		$this->_uri_pieces['path'][1] = $id;
 		if (isset($rev))
@@ -106,10 +106,10 @@ class Document extends Cushion {
 	/**
 	 * Takes the data stored in $this->doc and uses it to update the existing document
 	 *
-	 * @access public
+	 * @access protected
 	 * @return array The response from the CouchDB server
 	 */
-	public function _update() {
+	protected function _update() {
 		if ($this->_active) {
 			$output = $this->_execute(HTTP_METH_PUT, $this->doc);
 
@@ -124,10 +124,10 @@ class Document extends Cushion {
 	/**
 	 * Deletes the document from the server
 	 *
-	 * @access public
+	 * @access protected
 	 * @return array The response from the CouchDB server
 	 */
-	public function _delete() {
+	protected function _delete() {
 		if ($this->_active) {
 			$this->_execute(HTTP_METH_DELETE);
 
@@ -140,11 +140,11 @@ class Document extends Cushion {
 	/**
 	 * Creates a copy of the existing document to another specified ID
 	 *
-	 * @access public
+	 * @access protected
 	 * @param string $to_id The _id for the new document you will be creating
 	 * @return array The response from the CouchDB server
 	 */
-	public function _copy($to_id) {
+	protected function _copy($to_id) {
 		return $this->_execute(HTTP_METH_COPY, null, null, null, Array(
 			'headers' => Array('Destination' => $to_id)
 		));
