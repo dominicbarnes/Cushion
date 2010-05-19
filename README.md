@@ -21,7 +21,9 @@ Cushion requires the [PECL_HTTP](http://pecl.php.net/package/pecl_http) extensio
 
 ## Examples
 
-### *C*reate a Document
+These are the examples right out of the `examples` directory. I've worked especially hard to keep the interface with these classes as simple and intuitive as possible. Official Documentation is en-route!
+
+### **C**reate a Document
 
 	<?php
 
@@ -58,7 +60,7 @@ Cushion requires the [PECL_HTTP](http://pecl.php.net/package/pecl_http) extensio
 
 	?>
 
-### *R*ead a Document
+### **R**ead a Document
 
 	<?php
 
@@ -82,7 +84,7 @@ Cushion requires the [PECL_HTTP](http://pecl.php.net/package/pecl_http) extensio
 
 	?>
 
-### *U*pdate a Document
+### **U**pdate a Document
 
 	<?php
 
@@ -115,7 +117,7 @@ Cushion requires the [PECL_HTTP](http://pecl.php.net/package/pecl_http) extensio
 
 	?>
 
-### *D*elete a Document
+### **D**elete a Document
 
 	<?php
 
