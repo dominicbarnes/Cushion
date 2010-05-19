@@ -23,7 +23,7 @@ Cushion requires the [PECL_HTTP](http://pecl.php.net/package/pecl_http) extensio
 
 These are the examples right out of the `examples` directory. I've worked especially hard to keep the interface with these classes as simple and intuitive as possible. Official Documentation is en-route!
 
-### **C**reate a Document
+### Create a Document
 
 	<?php
 
@@ -60,7 +60,7 @@ These are the examples right out of the `examples` directory. I've worked especi
 
 	?>
 
-### **R**ead a Document
+### Read a Document
 
 	<?php
 
@@ -84,7 +84,7 @@ These are the examples right out of the `examples` directory. I've worked especi
 
 	?>
 
-### **U**pdate a Document
+### Update a Document
 
 	<?php
 
@@ -117,7 +117,7 @@ These are the examples right out of the `examples` directory. I've worked especi
 
 	?>
 
-### **D**elete a Document
+### Delete a Document
 
 	<?php
 
