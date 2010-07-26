@@ -6,6 +6,8 @@
  * @package cushion
  */
 class View extends Cushion {
+	public $Name;
+
 	private $_designdoc;
 
 	private $_methods;
@@ -32,18 +34,31 @@ class View extends Cushion {
 		if (isset($this->_methods['reduce']))
 			$params['reduce'] = false;
 
+		$this->_view_uri();
+
 		return $this->_execute(null, null, null, $params);
 	}
 
 	public function Reduce($params = Array()) {
 		$params['reduce'] = true;
 
+		$this->_view_uri();
+
 		return $this->_execute(null, null, null, $params);
 	}
 
+	public function ListQuery($listname, $params = null) {
+		$this->_list_uri($listname);
+
+		return $this->_execute(null, null, null, $params, null, false, false);
+	}
+
 	private function _add($designdoc, $name, $map, $reduce = null) {
+		$this->_designdoc = $designdoc;
+		$this->Name = $name;
+
 		$this->_uri_pieces = $designdoc->_uri_pieces;
-		$this->_uri_pieces['path'][] = '_view/' . $name;
+		$this->_view_uri();
 		unset($this->_uri_pieces['query']['rev']);
 
 		$this->_methods = array_filter(compact($map, $reduce));
@@ -56,8 +71,11 @@ class View extends Cushion {
 	}
 
 	private function _get($designdoc, $name) {
+		$this->_designdoc = $designdoc;
+		$this->Name = $name;
+
 		$this->_uri_pieces = $designdoc->_uri_pieces;
-		$this->_uri_pieces['path'][] = '_view/' . $name;
+		$this->_view_uri();
 		unset($this->_uri_pieces['query']['rev']);
 
 		if (isset($designdoc->doc['views'][$name]))
@@ -81,5 +99,15 @@ class View extends Cushion {
 		$designdoc->Update();
 
 		$this->_active = false;
+	}
+
+	private function _view_uri() {
+		$this->_uri_pieces['path'][2] = '_view/' . $this->Name;
+		unset($this->_uri_pieces['path'][3]);
+	}
+
+	private function _list_uri($listname) {
+		$this->_uri_pieces['path'][2] = '_list/' . $listname;
+		$this->_uri_pieces['path'][3] = $this->Name;
 	}
 }

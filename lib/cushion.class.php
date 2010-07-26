@@ -5,7 +5,7 @@ require_once('server.class.php');	// Server Interface
 require_once('database.class.php');	// Database Interface
 require_once('document.class.php');	// Document Interface
 require_once('designdoc.class.php');	// Design Document Interface (extends Document, not Cushion)
-require_once('view.class.php');	// View Interface
+require_once('view.class.php');		// View Interface
 
 /**
  * Performs the actual work of making the HTTP request to the server, parsing the response and processing errors
@@ -129,7 +129,7 @@ abstract class Cushion {
 		if (!empty($uri['query']))
 			$uri['query'] = http_build_query($uri['query']);
 
-		return http_build_url($uri);
+		return http_build_url('http://localhost/', $uri);
 	}
 
 	private function _boolString($value) {
@@ -146,33 +146,45 @@ abstract class Cushion {
 	 * @param array $options Array of additional options (including additional headers) to be sent with the HTTP request
 	 * @return array The json_decoded response received
 	 */
-	protected function _execute($method = HTTP_METH_GET, $data = null, $append_path = null, $append_query = null, $options = null) {
+	protected function _execute($method = HTTP_METH_GET, $data = null, $append_path = null, $append_query = null, $options = null, $raw_data = false, $json_response = true) {
 		$info = Array();
 
-		$defaults = Array(
-			'headers' => Array(
+		$defaults = Array( 'cookies' => $_COOKIE );
+		if ($json_response) {
+			$defaults['headers'] = Array(
 				'Content-Type' => 'application/json',
 				'Accept' => 'application/json'
-			)
-		);
+			);
+		}
+
 		if (isset($this->_auth))	$defaults['httpauth'] = $this->_auth;
-		$options = (isset($options)) ? array_merge_recursive($defaults, $options) : $defaults;
+		$options = isset($options) ? array_merge($defaults, $options) : $defaults;
 
 		$this->_setURI();
 		$uri = (isset($append_path) || isset($append_query)) ? $this->_buildURI($append_path, $append_query) : $this->_uri;
+		$data = $raw_data ? http_build_query($data) : json_encode($data);
 
-		$output = trim(http_parse_message(http_request($method, $uri, json_encode($data), $options, $info))->body);
+		$output = http_parse_message(http_request($method, $uri, $data, $options, $info));
 
 		if ($this->debug) {
-			echo 'Output: ' . $output . "\n\n";
-			echo 'HTTP Info: ';
-			print_r($info);
+			echo '<pre>';
+			echo 'Output: ' . htmlspecialchars(print_r($output, true));
+			echo 'HTTP Info: ' . htmlspecialchars(print_r($info, true));
+			echo 'Options: ' . htmlspecialchars(print_r($options, true));
+			echo 'Data: ' . htmlspecialchars(print_r($data, true));
+			echo '</pre>';
 		}
 
-		$output = json_decode($output, true);
+		if (isset($output->headers['Set-Cookie'])) {
+			$oCookie = http_parse_cookie($output->headers['Set-Cookie']);
+			setcookie('AuthSession', $oCookie->cookies['AuthSession'], time() + 600, $oCookie->path);
+		}
 
-		if (isset($output['error']))
-			throw new CouchException($output['error'], $output['reason'], $info['response_code']);
+		$output = ($json_response) ? json_decode($output->body, true) : $output->body;
+
+		if (is_array($output) && isset($output['error'])) {
+			throw new CouchException($output['error'], $output['reason'], $info['response_code'], $uri);
+		}
 
 		return $output;
 	}

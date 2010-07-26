@@ -71,4 +71,30 @@ class Server extends Cushion {
 			'continuous' => $continuous
 		), '_replicate');
 	}
+
+	public function Login($username, $password) {
+		return $this->_execute(
+			HTTP_METH_POST,
+			Array(
+				'name' => $username,
+				'password' => $password
+			),
+			'_session',
+			null,
+			Array(
+				'headers' => Array(
+					'Content-Type' => 'application/x-www-form-urlencoded'
+				)
+			),
+			true
+		);
+	}
+
+	public function Logout() {
+		return $this->_execute(HTTP_METH_DELETE, null, '_session');
+	}
+
+	public function Session() {
+		return $this->_execute(null, null, '_session');
+	}
 }

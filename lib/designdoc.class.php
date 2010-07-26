@@ -1,6 +1,8 @@
 <?php
 
 class DesignDocument extends Document {
+	public $Name;
+
 	public static function Create($db, $designdoc_name, $views, $shows = null, $lists = null, $updates = null, $validate = null) {
 		$d = new DesignDocument;
 
@@ -11,6 +13,7 @@ class DesignDocument extends Document {
 		if (isset($validate))	$doc['validate_doc_update'] = $validate;
 
 		$d->_create($db, $doc, '_design/' . $designdoc_name);
+		$d->Name = $designdoc_name;
 
 		return $d;
 	}
@@ -19,6 +22,7 @@ class DesignDocument extends Document {
 		$d = new DesignDocument;
 
 		$d->_get($db, '_design/' . $designdoc_name, $rev);
+		$d->Name = $designdoc_name;
 		$d->_active = true;
 
 		return $d;
@@ -29,14 +33,10 @@ class DesignDocument extends Document {
 	}
 
 	public function MapView($name, $params = null) {
-		return View::Get($this, $name)->Map();
+		return View::Get($this, $name)->Map($params);
 	}
 
 	public function ReduceView($name, $params = null) {
-		return View::Get($this, $name)->Reduce();
-	}
-
-	public function RereduceView($name, $params = null) {
-		return View::Get($this, $name)->Rereduce();
+		return View::Get($this, $name)->Reduce($params);
 	}
 }

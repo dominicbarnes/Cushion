@@ -10,7 +10,9 @@ class CouchException extends Exception {
 	 * @var string Additional information about this Exception. The type of error specified by the CouchDB response {"error": "[type]", "reason": "[message]"}
 	 * @access private
 	 */
-	private $type;
+	private $_type;
+
+	private $_uri;
 
 	/**
 	 * Constructor Method :: Takes in the information given, assigns the internal properties and gets the Status Code message for the HTTP response
@@ -20,11 +22,12 @@ class CouchException extends Exception {
 	 * @param string $message The reason for the error according to the CouchDB response
 	 * @param integer $code The HTTP Response Code
 	 */
-	function __construct($type, $message, $code) {
+	function __construct($type, $message, $code, $uri) {
 		// make sure everything is assigned properly
 		parent::__construct($message, $code);
 
-		$this->type = $type;
+		$this->_type = $type;
+		$this->_uri = $uri;
 		$this->message = $message;
 		$this->code = $code;
 		$this->code_message = Cushion::$httpmessages[$code];
@@ -37,16 +40,16 @@ class CouchException extends Exception {
 	 * @return string Formatted exception message
 	 */
 	public function __toString() {
-		return __CLASS__ . ": [{$this->code} {$this->code_message}] [{$this->type}]: {$this->message} \n";
+		return __CLASS__ . ": [{$this->code} {$this->code_message}] [{$this->_type}]: {$this->message} :: <a href=\"{$this->_uri}\">{$this->_uri}</a>\n";
 	}
 
 	public function getType() {
-		return $this->type;
+		return $this->_type;
 	}
 
 	public function getArray() {
 		return Array(
-			'type' => $this->type,
+			'type' => $this->_type,
 			'message' => $this->message,
 			'httpcode' => $this->code,
 			'httpresponse' => Cushion::$httpmessages[$code]

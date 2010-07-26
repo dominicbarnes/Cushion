@@ -48,18 +48,13 @@ class Database extends Cushion {
 			$this->_setURI();
 
 			return $this->info['general'] = $this->_execute();
-		} catch (Exception $e) {
-			if ($create && $e->getType() == 'not_found' && $e->getMessage() == 'no_db_file')
+		} catch (CouchException $e) {
+			if ($create && $e->getType() == 'not_found' && $e->getMessage() == 'no_db_file') {
 				return Database::Create($server, $name);
+			} else {
+				throw $e;
+			}
 		}
-	}
-
-	public function CreateDocument($doc, $id = null) {
-		return Document::Create($this, $doc, $id);
-	}
-
-	public function CreateDesignDocument($designdoc_name, $views, $shows = null, $lists = null, $updates = null, $validate = null) {
-		return DesignDocument::Create($this, $designdoc_name, $views, $shows, $lists, $updates, $validate);
 	}
 
 	/**
@@ -111,6 +106,15 @@ class Database extends Cushion {
 		return $results;
 	}
 
+
+	public function CreateDocument($doc, $id = null) {
+		return Document::Create($this, $doc, $id);
+	}
+
+	public function CreateDesignDocument($designdoc_name, $views, $shows = null, $lists = null, $updates = null, $validate = null) {
+		return DesignDocument::Create($this, $designdoc_name, $views, $shows, $lists, $updates, $validate);
+	}
+
 	public function GetDocument($id = null, $rev = null) {
 		if (!isset($id) && !isset($rev))
 			return $this->AllDocs();
@@ -120,5 +124,10 @@ class Database extends Cushion {
 
 	public function GetDesignDocument($name, $rev = null) {
 		return DesignDocument::Get($this, $name, $rev);
+	}
+
+	public function DeleteDocument($id, $rev = null) {
+		$d = Document::Get($this, $id, $rev);
+		return $d->Delete();
 	}
 }
